@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>KeranjangKita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBHum3lY58OWk0R2O12_Y52lKeo1vdh40A",
+            authDomain: "keranjangkita-c10b2.firebaseapp.com",
+            projectId: "keranjangkita-c10b2",
+            storageBucket: "keranjangkita-c10b2.firebasestorage.app",
+            messagingSenderId: "946764205167",
+            appId: "1:946764205167:web:e5c8926ad7b3e0fe94d19a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentRole = 'ART';
+        let items = [];
+
+        signInAnonymously(auth).catch(console.error);
+
+        function updateUI() {
+            const container = document.getElementById('app');
+            container.innerHTML = `
+                <div class="h-screen flex flex-col bg-gray-100">
+                    <!-- Header -->
+                    <div class="bg-emerald-600 text-white p-4 shadow-md">
+                        <h1 class="text-xl font-bold mb-3">KeranjangKita</h1>
+                        <div class="flex bg-emerald-800 rounded-lg p-1">
+                            <button onclick="setRole('IBU')" class="flex-1 py-2 text-sm rounded ${currentRole === 'IBU' ? 'bg-white text-emerald-600 font-bold' : 'text-emerald-100'}">IBU</button>
+                            <button onclick="setRole('ART')" class="flex-1 py-2 text-sm rounded ${currentRole === 'ART' ? 'bg-white text-emerald-600 font-bold' : 'text-emerald-100'}">ART</button>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
+                        ${currentRole === 'ART' ? `
+                            <div class="bg-white p-4 rounded-xl shadow-sm">
+                                <input type="text" id="itemName" placeholder="Nama barang..." class="w-full p-2 border rounded-lg mb-2 text-sm">
+                                <button onclick="addItem()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold">Tambah</button>
+                            </div>
+                        ` : ''}
+                        
+                        ${items.map(item => `
+                            <div class="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-gray-800">${item.name}</p>
+                                    <p class="text-xs text-gray-500">${item.status}</p>
+                                </div>
+                                ${currentRole === 'IBU' && item.status === 'DIBUTUHKAN' ? `
+                                    <button onclick="updateStatus('${item.id}', 'DIBELI')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs">Beli</button>
+                                ` : ''}
+                                ${currentRole === 'ART' && item.status === 'DIBELI' ? `
+                                    <button onclick="updateStatus('${item.id}', 'DITERIMA')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs">Terima</button>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        window.setRole = (role) => { currentRole = role; updateUI(); };
+        window.addItem = async () => {
+            const name = document.getElementById('itemName').value;
+            if(!name) return;
+            await addDoc(collection(db, 'shopping_items'), { name, status: 'DIBUTUHKAN', createdAt: Date.now() });
+            document.getElementById('itemName').value = '';
+        };
+        window.updateStatus = async (id, status) => {
+            await updateDoc(doc(db, 'shopping_items', id), { status });
+        };
+
+        onSnapshot(collection(db, 'shopping_items'), (snapshot) => {
+            items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
+            updateUI();
+        });
+    </script>
+</head>
+<body>
+    <div id="app">Memuat aplikasi...</div>
+</body>
+</html>
+```
+
+### Cara Membuka di HP/Laptop:
+1. **Simpan sebagai `index.html`**: Simpan kode di atas di Notepad atau teks editor apa saja.
+2. **Coba langsung**: Klik dua kali file tersebut, ia akan terbuka di browser Anda (Chrome/Safari).
+3. **Pindahkan ke HP**: Anda bisa mengirim file `index.html` ini ke HP Anda lewat WhatsApp atau email, lalu klik untuk membukanya.
+4. **Deploy Instan**: Jika ingin punya link URL, buka [Netlify Drop](https://app.netlify.com/drop), lalu *drag & drop* file `index.html` Anda ke sana. Anda akan langsung dapat link `https://random-name.netlify.app`.
+
+Apakah ini sudah terasa jauh lebih mudah dan simpel sesuai keinginan Anda?
